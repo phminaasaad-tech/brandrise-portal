@@ -196,10 +196,11 @@ td.rq{min-width:240px;max-width:360px;white-space:pre-wrap}
 td:nth-child(1),td:nth-child(2){white-space:nowrap}
 .id{font-family:"Sora",monospace;color:var(--gold-hi);font-weight:600;white-space:nowrap}
 .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid}
-.p-new{color:#9EC5FF;border-color:rgba(158,197,255,.35);background:rgba(158,197,255,.10)}
-.p-prog{color:var(--warn);border-color:rgba(227,155,84,.35);background:rgba(227,155,84,.10)}
+.p-received{color:#9EC5FF;border-color:rgba(158,197,255,.35);background:rgba(158,197,255,.10)}
+.p-working{color:var(--warn);border-color:rgba(227,155,84,.35);background:rgba(227,155,84,.10)}
 .p-done{color:#9FE3C0;border-color:rgba(79,169,124,.35);background:rgba(79,169,124,.10)}
-.p-rej{color:#FFB3AA;border-color:rgba(224,91,75,.35);background:rgba(224,91,75,.10)}
+.p-rejected{color:#FFB3AA;border-color:rgba(224,91,75,.35);background:rgba(224,91,75,.10)}
+.p-other{color:var(--silver-dim);border-color:var(--line);background:#141419}
 .p-low{color:var(--muted);border-color:var(--line);background:#141419}
 .p-normal{color:#9EC5FF;border-color:rgba(158,197,255,.3);background:rgba(158,197,255,.08)}
 .p-high{color:var(--warn);border-color:rgba(227,155,84,.35);background:rgba(227,155,84,.10)}
@@ -220,6 +221,25 @@ td select{padding:6px 8px;font-size:12.5px;border-radius:8px;min-width:120px}
   padding:7px 13px;border-radius:999px;font-size:12px;display:none
 }
 .badge-demo.on{display:block}
+.datefield{position:relative}
+.datefield input[type="date"]{padding-inline-start:44px;padding-inline-end:16px;cursor:pointer;color-scheme:dark}
+.datefield .cal{
+  position:absolute;inset-inline-start:14px;top:50%;transform:translateY(-50%);
+  color:var(--brand);pointer-events:none;display:flex;
+}
+.datefield input[type="date"]::-webkit-calendar-picker-indicator{
+  position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer;
+}
+.datehint{margin-top:7px;font-size:12.5px;color:var(--muted)}
+.datehint.set{color:var(--gold-hi)}
+.loadbar{
+  display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:13px 18px;
+  border:1px solid var(--line);border-radius:12px;background:var(--panel);
+  color:var(--silver-dim);font-size:13.5px;
+}
+.loadbar.off{display:none}
+.loadbar.failed{border-color:rgba(224,91,75,.45);background:rgba(224,91,75,.08);color:#FFC7C0}
+.loading-gold{border-color:rgba(217,166,46,.25);border-top-color:var(--gold)}
 .loading{display:inline-block;width:15px;height:15px;border:2px solid rgba(0,0,0,.25);
   border-top-color:#140F00;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -332,6 +352,12 @@ td select{padding:6px 8px;font-size:12.5px;border-radius:8px;min-width:120px}
         <div class="empty" id="dualEmpty">اختار الشركة عشان يظهر البراندنج بتاعها هنا</div>
       </div>
 
+      <div class="loadbar" id="bootLoad">
+        <span class="loading loading-gold"></span>
+        <span id="bootText">بنجهّز الشركات والقنوات من الشيت…</span>
+        <button class="btn btn-ghost" id="bootRetry" type="button" style="display:none;padding:6px 14px">حاول تاني</button>
+      </div>
+
       <form class="panel" id="reqForm">
         <h3>تفاصيل الطلب</h3>
         <p class="sub">كل الحقول اللي عليها نجمة مطلوبة. كل ما التفاصيل تكون أوضح، كل ما التنفيذ يبقى أسرع.</p>
@@ -366,7 +392,15 @@ td select{padding:6px 8px;font-size:12.5px;border-radius:8px;min-width:120px}
         <div class="grid two">
           <div class="field">
             <label for="f_due">تاريخ التسليم <span class="en">due date</span></label>
-            <input id="f_due" type="date">
+            <div class="datefield">
+              <input id="f_due" type="date">
+              <span class="cal" id="calIcon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/>
+                </svg>
+              </span>
+            </div>
+            <div class="datehint" id="dueHint">اضغط على الخانة عشان تفتح النتيجة</div>
           </div>
           <div class="field">
             <label for="f_note">ملاحظات <span class="en">note</span></label>
@@ -397,6 +431,7 @@ td select{padding:6px 8px;font-size:12.5px;border-radius:8px;min-width:120px}
     <section class="view" id="view-mine">
       <div class="tools">
         <input id="mineSearch" placeholder="ابحث في طلباتك…">
+        <select id="mineStatus"><option value="">كل الحالات</option></select>
         <button class="btn btn-ghost" id="mineRefresh" type="button">تحديث</button>
       </div>
       <div class="tablewrap" id="mineWrap"></div>
@@ -407,7 +442,7 @@ td select{padding:6px 8px;font-size:12.5px;border-radius:8px;min-width:120px}
       <div class="stats" id="adminStats"></div>
       <div class="tools">
         <input id="admSearch" placeholder="ابحث بالرقم، الشركة، الطلب…">
-        <select id="admStatus"><option value="">كل الحالات</option><option>New</option><option>In Progress</option><option>Done</option><option>Rejected</option></select>
+        <select id="admStatus"><option value="">كل الحالات</option></select>
         <select id="admCompany"><option value="">كل الشركات</option></select>
         <select id="admUrgency"><option value="">كل الأولويات</option></select>
         <button class="btn btn-ghost" id="admRefresh" type="button">تحديث</button>
@@ -455,6 +490,7 @@ var DEMO_DB = {
     {company:'VC',value:'Downtown'}
   ],
   urgency:[{value:'Low',sla:7},{value:'Normal',sla:4},{value:'High',sla:2},{value:'Critical',sla:1}],
+  statuses:[{label:'Received',color:'#9EC5FF'},{label:'Working',color:'#E39B54'},{label:'Done',color:'#4FA97C'},{label:'Rejected',color:'#E05B4B'}],
   requests:[]
 };
 
@@ -504,14 +540,14 @@ function demoApi(action, body){
         var comps = DEMO_DB.companies.filter(function(c){
           return me.role==='admin' || me.companies.indexOf('ALL')>-1 || me.companies.indexOf(c.code)>-1;
         });
-        resolve({ok:true, companies:comps, channels:DEMO_DB.channels, branches:DEMO_DB.branches, urgency:DEMO_DB.urgency});
+        resolve({ok:true, companies:comps, channels:DEMO_DB.channels, branches:DEMO_DB.branches, urgency:DEMO_DB.urgency, statuses:DEMO_DB.statuses});
       } else if (action === 'submit'){
         var p = body.payload, id = 'BR-DEMO-' + ('000'+(DEMO_DB.requests.length+1)).slice(-4);
         var cn = (DEMO_DB.companies.filter(function(c){return c.code===p.company;})[0]||{}).name || p.company;
         DEMO_DB.requests.push({id:id, created:new Date().toISOString().slice(0,16).replace('T',' '),
           username:String(state.token||'').split(':')[1], requester:p.requester_name, company:p.company, company_name:cn,
           channel:p.sales_channel, request:p.request, branch:p.branch, urgency:p.urgency,
-          due:p.due_date||'', note:p.note||'', status:'New', assignee:''});
+          due:p.due_date||'', note:p.note||'', status:'Received', assignee:''});
         resolve({ok:true, id:id});
       } else if (action === 'myRequests'){
         var un = String(state.token||'').split(':')[1];
@@ -536,9 +572,29 @@ function busy(btn, on, label){
   if (on){ btn.dataset.t = btn.innerHTML; btn.innerHTML = '<span class="loading"></span> ' + (label||'ثانية…'); }
   else if (btn.dataset.t){ btn.innerHTML = btn.dataset.t; }
 }
+var STATUS_FALLBACK = [
+  { label:'Received', color:'#9EC5FF' },
+  { label:'Working',  color:'#E39B54' },
+  { label:'Done',     color:'#4FA97C' },
+  { label:'Rejected', color:'#E05B4B' }
+];
+var STATUS_AR = { 'Received':'اتستلم', 'Working':'تحت التنفيذ', 'Done':'تم', 'Rejected':'مرفوض' };
+var STATUS_ALIAS = { 'New':'Received', 'In Progress':'Working' };
+
+function statusList(){
+  return (state.data && state.data.statuses && state.data.statuses.length)
+    ? state.data.statuses : STATUS_FALLBACK;
+}
+function normStatus(s){
+  s = String(s || '').trim() || 'Received';
+  return STATUS_ALIAS[s] || s;
+}
 function statusPill(s){
-  var m = {'New':'p-new','In Progress':'p-prog','Done':'p-done','Rejected':'p-rej'};
-  return '<span class="pill ' + (m[s]||'p-new') + '">' + esc(s||'New') + '</span>';
+  s = normStatus(s);
+  var key = s.toLowerCase().replace(/\s+/g,'-');
+  var cls = ['received','working','done','rejected'].indexOf(key) > -1 ? 'p-' + key : 'p-other';
+  var ar = STATUS_AR[s];
+  return '<span class="pill ' + cls + '">' + esc(s) + (ar ? ' · ' + ar : '') + '</span>';
 }
 function urgencyPill(u){
   return '<span class="pill p-' + esc(String(u||'').toLowerCase()) + '">' + esc(u||'—') + '</span>';
@@ -602,13 +658,31 @@ $('#loginForm').addEventListener('submit', function(e){
     .then(function(){ busy(btn, false); });
 });
 
+function setBoot(state, msg){
+  var bar = $('#bootLoad');
+  bar.className = 'loadbar' + (state === 'done' ? ' off' : state === 'failed' ? ' failed' : '');
+  $('#bootText').textContent = msg || '';
+  $('#bootRetry').style.display = state === 'failed' ? 'inline-flex' : 'none';
+  bar.querySelector('.loading').style.display = state === 'loading' ? 'inline-block' : 'none';
+  ['#f_company','#f_channel','#f_branch','#f_urgency','#f_request','#f_due','#f_note','#sendBtn']
+    .forEach(function(s){ $(s).disabled = state !== 'done'; });
+  if (state === 'done') onCompany();
+}
+
 function startApp(){
   $('#gate').style.display = 'none';
   $('#app').classList.add('on');
   $('#whoName').textContent = state.user.name || state.user.username;
   $('#whoRole').textContent = state.user.role === 'admin' ? 'Brand Rise — Admin' : 'Client account';
   $('#tabAdmin').style.display = state.user.role === 'admin' ? 'block' : 'none';
+
+  setBoot('loading', 'بنجهّز الشركات والقنوات من الشيت…');
+  var slow = setTimeout(function(){
+    $('#bootText').textContent = 'الشيت بيصحى من السكون — ممكن ياخد لحد ٢٠ ثانية أول مرة.';
+  }, 5000);
+
   return api('bootstrap').then(function(res){
+    clearTimeout(slow);
     if (!res.ok) throw new Error(res.error);
     state.data = res;
     var sel = $('#f_company');
@@ -630,11 +704,26 @@ function startApp(){
     res.urgency.forEach(function(u){
       var o = document.createElement('option'); o.value = u.value; o.textContent = u.value; au.appendChild(o);
     });
-    if (res.companies.length === 1) { sel.value = res.companies[0].code; onCompany(); }
+    [$('#admStatus'), $('#mineStatus')].forEach(function(sel){
+      sel.innerHTML = '<option value="">كل الحالات</option>';
+      statusList().forEach(function(s){
+        var o = document.createElement('option'); o.value = s.label;
+        o.textContent = s.label + (STATUS_AR[s.label] ? ' · ' + STATUS_AR[s.label] : '');
+        sel.appendChild(o);
+      });
+    });
+    if (res.companies.length === 1) { sel.value = res.companies[0].code; }
+    setBoot('done');
     loadMine();
     if (state.user.role === 'admin') loadAll();
+  }).catch(function(err){
+    clearTimeout(slow);
+    setBoot('failed', 'تعذّر تحميل البيانات من الشيت: ' + err.message);
+    throw err;
   });
 }
+
+$('#bootRetry').addEventListener('click', function(){ startApp().catch(function(){}); });
 
 $('#logoutBtn').addEventListener('click', function(){
   try { sessionStorage.removeItem('br_session'); } catch(e){}
@@ -656,6 +745,22 @@ function onCompany(){
 $('#f_company').addEventListener('change', onCompany);
 
 $('#f_due').min = new Date().toISOString().slice(0,10);
+
+$('#f_due').addEventListener('click', function(){
+  if (this.showPicker) { try { this.showPicker(); } catch(e){} }
+});
+$('#f_due').addEventListener('change', function(){
+  var hint = $('#dueHint');
+  if (!this.value){ hint.textContent = 'اضغط على الخانة عشان تفتح النتيجة'; hint.className = 'datehint'; return; }
+  var d = new Date(this.value + 'T00:00:00');
+  var txt;
+  try {
+    txt = d.toLocaleDateString('ar-EG', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  } catch(e){ txt = this.value; }
+  var days = Math.round((d - new Date(new Date().toDateString())) / 86400000);
+  hint.textContent = txt + (days === 0 ? ' — النهارده' : days === 1 ? ' — بكرة' : days > 1 ? ' — كمان ' + days + ' يوم' : '');
+  hint.className = 'datehint set';
+});
 
 $('#reqForm').addEventListener('submit', function(e){
   e.preventDefault();
@@ -691,10 +796,16 @@ $('#reqForm').addEventListener('submit', function(e){
 });
 
 $('#clearBtn').addEventListener('click', function(){
-  setTimeout(function(){ onCompany(); hide($('#reqMsg')); }, 0);
+  setTimeout(function(){
+    onCompany(); hide($('#reqMsg'));
+    $('#dueHint').textContent = 'اضغط على الخانة عشان تفتح النتيجة';
+    $('#dueHint').className = 'datehint';
+  }, 0);
 });
 $('#againBtn').addEventListener('click', function(){
   $('#reqForm').reset(); onCompany();
+  $('#dueHint').textContent = 'اضغط على الخانة عشان تفتح النتيجة';
+  $('#dueHint').className = 'datehint';
   $('#donePanel').style.display = 'none';
   $('#reqForm').style.display = 'block';
   window.scrollTo({top:0, behavior:'smooth'});
@@ -721,10 +832,13 @@ function loadMine(){
 }
 $('#mineRefresh').addEventListener('click', loadMine);
 $('#mineSearch').addEventListener('input', renderMine);
+$('#mineStatus').addEventListener('change', renderMine);
 
 function renderMine(){
   var q = $('#mineSearch').value.trim().toLowerCase();
+  var st = $('#mineStatus').value;
   var rows = state.mine.filter(function(r){
+    if (st && normStatus(r.status) !== st) return false;
     return !q || JSON.stringify(r).toLowerCase().indexOf(q) > -1;
   });
   if (!rows.length){
@@ -758,7 +872,7 @@ function adminFiltered(){
   var q = $('#admSearch').value.trim().toLowerCase();
   var st = $('#admStatus').value, co = $('#admCompany').value, ur = $('#admUrgency').value;
   return state.all.filter(function(r){
-    if (st && r.status !== st) return false;
+    if (st && normStatus(r.status) !== st) return false;
     if (co && r.company !== co) return false;
     if (ur && r.urgency !== ur) return false;
     if (q && JSON.stringify(r).toLowerCase().indexOf(q) === -1) return false;
@@ -768,11 +882,15 @@ function adminFiltered(){
 
 function renderAdmin(){
   var all = state.all;
-  var c = {New:0,'In Progress':0,Done:0,Rejected:0};
-  all.forEach(function(r){ if (c[r.status] !== undefined) c[r.status]++; });
-  $('#adminStats').innerHTML =
-    stat(all.length,'كل الطلبات') + stat(c['New'],'جديد') + stat(c['In Progress'],'تحت التنفيذ') +
-    stat(c['Done'],'تم') + stat(all.filter(function(r){return r.urgency==='Critical' && r.status!=='Done';}).length,'حرج ومفتوح');
+  var counts = {};
+  statusList().forEach(function(s){ counts[s.label] = 0; });
+  all.forEach(function(r){ var k = normStatus(r.status); if (counts[k] !== undefined) counts[k]++; });
+  var cards = stat(all.length, 'كل الطلبات');
+  statusList().forEach(function(s){ cards += stat(counts[s.label] || 0, STATUS_AR[s.label] || s.label); });
+  cards += stat(all.filter(function(r){
+    return r.urgency === 'Critical' && ['Done','Rejected'].indexOf(normStatus(r.status)) === -1;
+  }).length, 'حرج ومفتوح');
+  $('#adminStats').innerHTML = cards;
 
   var rows = adminFiltered();
   if (!rows.length){
@@ -788,8 +906,8 @@ function renderAdmin(){
       + '<td>' + esc(r.channel) + '</td><td>' + esc(r.branch) + '</td>'
       + '<td>' + urgencyPill(r.urgency) + '</td><td>' + esc(r.due || '—') + '</td>'
       + '<td><select data-id="' + esc(r.id) + '" class="st">'
-        + ['New','In Progress','Done','Rejected'].map(function(s){
-            return '<option' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('')
+        + statusList().map(function(s){
+            return '<option' + (s.label === normStatus(r.status) ? ' selected' : '') + '>' + esc(s.label) + '</option>'; }).join('')
       + '</select></td>'
       + '<td><input class="as" data-id="' + esc(r.id) + '" value="' + esc(r.assignee) + '" placeholder="اسم المسؤول" style="min-width:130px;padding:6px 8px;font-size:12.5px"></td></tr>';
   });
@@ -835,11 +953,20 @@ $('#admExport').addEventListener('click', function(){
 
 /* ============ استئناف الجلسة ============ */
 if (DEMO) $('#demoBadge').classList.add('on');
+
+// إحماء Apps Script وهو لسه في شاشة الدخول، عشان أول طلب حقيقي ميستناش
+if (!DEMO) { api('ping').catch(function(){}); }
+
 try {
   var saved = JSON.parse(sessionStorage.getItem('br_session') || 'null');
   if (saved && saved.t) {
     state.token = saved.t; state.user = saved.u;
-    startApp().catch(function(){ sessionStorage.removeItem('br_session'); location.reload(); });
+    startApp().catch(function(err){
+      if (/جلسة|الجلسة/.test(err.message || '')) {
+        sessionStorage.removeItem('br_session');
+        location.reload();
+      }
+    });
   }
 } catch(e){}
 
