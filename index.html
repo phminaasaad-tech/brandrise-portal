@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brand Rise — Client Request Portal</title>
+<link rel="icon" href="assets/logos/brandrise.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#08080A;
+  --panel:#111114;
+  --panel-2:#17171C;
+  --raise:#1D1D24;
+  --line:#2A2A33;
+  --silver:#D7DBE0;
+  --silver-dim:#9AA0A9;
+  --muted:#7C828C;
+  --gold:#D9A62E;
+  --gold-hi:#F2D07A;
+  --brand:#D9A62E;          /* يتغير حسب شركة العميل */
+  --ok:#4FA97C;
+  --warn:#E39B54;
+  --bad:#E05B4B;
+  --r:14px;
+  --shadow:0 24px 60px rgba(0,0,0,.55);
+  --seam:linear-gradient(180deg,transparent,var(--gold) 18%,var(--brand) 82%,transparent);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:
+    radial-gradient(1100px 600px at 80% -10%, rgba(217,166,46,.10), transparent 60%),
+    radial-gradient(900px 500px at 0% 110%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 60%),
+    var(--ink);
+  color:var(--silver);
+  font-family:"IBM Plex Sans Arabic",system-ui,"Segoe UI",sans-serif;
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display{font-family:"Sora","IBM Plex Sans Arabic",sans-serif;letter-spacing:-.02em;margin:0}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--gold-hi)}
+::selection{background:var(--gold);color:#000}
+
+/* ===================== الشعار المشترك (التوقيع البصري) ===================== */
+.lockup{display:flex;align-items:center;gap:14px}
+.mark{
+  width:52px;height:52px;border-radius:12px;object-fit:cover;
+  border:1px solid var(--line);background:#000;flex:none;
+  box-shadow:0 6px 18px rgba(0,0,0,.5);
+}
+.seam{
+  width:2px;height:44px;background:var(--seam);
+  transform:skewX(-18deg);border-radius:2px;flex:none;
+  transition:opacity .35s ease, height .35s ease;
+}
+.seam.off{opacity:0;height:0}
+.lockup-text{min-width:0}
+.lockup-text .t1{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.lockup-text .t2{font-family:"Sora",sans-serif;font-weight:600;font-size:16px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===================== شاشة الدخول ===================== */
+.gate{min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr}
+.gate-side{
+  position:relative;overflow:hidden;padding:48px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(140deg,#0C0C0F,#000 70%);
+  border-inline-start:1px solid var(--line);
+}
+.gate-side::after{
+  content:"";position:absolute;inset:auto -30% -35% -30%;height:70%;
+  background:conic-gradient(from 210deg at 50% 50%, transparent, rgba(217,166,46,.18), transparent 45%);
+  filter:blur(28px);pointer-events:none;
+}
+.gate-logo{width:min(320px,64%);display:block;margin:auto;border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.gate-tag{position:relative;z-index:1}
+.gate-tag h2{font-size:clamp(22px,2.4vw,30px);color:#fff;font-weight:800}
+.gate-tag p{color:var(--muted);max-width:42ch;margin:10px 0 0}
+.gate-main{display:flex;align-items:center;justify-content:center;padding:32px}
+.card{
+  width:100%;max-width:420px;background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line);border-radius:var(--r);padding:30px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+}
+.card::before{content:"";position:absolute;inset-inline:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),var(--brand),transparent)}
+.eyebrow{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.field{margin-top:16px}
+label{display:block;font-size:13px;color:var(--silver-dim);margin-bottom:7px;font-weight:500}
+label .en{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.req::after{content:" *";color:var(--bad)}
+input,select,textarea{
+  width:100%;background:#0C0C10;border:1px solid var(--line);border-radius:10px;
+  padding:11px 13px;color:#fff;transition:border-color .18s,box-shadow .18s;
+}
+textarea{min-height:118px;resize:vertical;line-height:1.65}
+input:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--brand);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
+}
+select{
+  appearance:none;padding-left:36px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%237C828C' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:left 14px center;background-size:12px 8px;
+}
+select:disabled,input:disabled,textarea:disabled{opacity:.5;cursor:not-allowed}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid transparent;border-radius:10px;padding:11px 18px;cursor:pointer;
+  font-weight:600;transition:transform .12s,filter .18s,background .18s;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#140F00}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--silver)}
+.btn-ghost:hover{border-color:var(--brand);color:#fff}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.msg{margin-top:14px;padding:10px 13px;border-radius:10px;font-size:13.5px;display:none}
+.msg.show{display:block}
+.msg.error{background:rgba(224,91,75,.12);border:1px solid rgba(224,91,75,.4);color:#FFC7C0}
+.msg.good{background:rgba(79,169,124,.12);border:1px solid rgba(79,169,124,.4);color:#BFEBD3}
+.hint{color:var(--muted);font-size:12.5px;margin-top:14px}
+
+/* ===================== التطبيق ===================== */
+.app{display:none;min-height:100vh;flex-direction:column}
+.app.on{display:flex}
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;
+  padding:12px 22px;background:rgba(8,8,10,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.spacer{flex:1}
+.who{text-align:end;line-height:1.35}
+.who b{color:#fff;font-weight:600;display:block;font-size:14px}
+.who span{color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:6px;padding:0 22px;border-bottom:1px solid var(--line);background:var(--panel);overflow-x:auto}
+.tab{
+  background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);
+  padding:13px 16px;cursor:pointer;font-weight:600;white-space:nowrap;
+}
+.tab:hover{color:var(--silver)}
+.tab.active{color:#fff;border-bottom-color:var(--brand)}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:26px 22px 70px}
+.view{display:none}
+.view.on{display:block;animation:rise .35s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* بانر البراندنج المزدوج */
+.dual{
+  display:flex;align-items:center;gap:20px;padding:16px 20px;margin-bottom:22px;
+  border:1px solid var(--line);border-radius:var(--r);
+  background:linear-gradient(100deg,#0D0D10 0%,#0D0D10 46%,color-mix(in srgb,var(--brand) 12%,#0D0D10) 100%);
+  position:relative;overflow:hidden;
+}
+.dual::after{
+  content:"";position:absolute;inset-block:-40%;inset-inline-end:-10%;width:44%;
+  background:linear-gradient(75deg,transparent,color-mix(in srgb,var(--brand) 22%,transparent));
+  transform:skewX(-18deg);pointer-events:none;
+}
+.dual .side{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.dual .cap{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.dual .nm{font-family:"Sora",sans-serif;font-weight:600;color:#fff}
+.dual .empty{color:var(--muted);font-size:13px;position:relative;z-index:1}
+
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:1fr 1fr}
+.panel{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);
+  border-radius:var(--r);padding:24px;box-shadow:var(--shadow)}
+.panel h3{font-size:17px;color:#fff;margin-bottom:4px}
+.panel .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+
+/* بطاقات الإحصائيات */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 17px}
+.stat .n{font-family:"Sora",sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1.1}
+.stat .l{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+
+/* الجداول */
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.tools input,.tools select{width:auto;min-width:150px;flex:0 1 200px}
+.tablewrap{border:1px solid var(--line);border-radius:var(--r);overflow:auto;background:var(--panel)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:840px}
+th{background:#0C0C10;color:var(--muted);text-align:start;font-weight:600;font-size:11.5px;
+  letter-spacing:.12em;text-transform:uppercase;padding:12px 14px;border-bottom:1px solid var(--line);position:sticky;top:0}
+td{padding:12px 14px;border-bottom:1px solid #1E1E25;vertical-align:top}
+tbody tr:hover{background:#141419}
+td.rq{min-width:240px;max-width:360px;white-space:pre-wrap}
+td:nth-child(1),td:nth-child(2){white-space:nowrap}
+.id{font-family:"Sora",monospace;color:var(--gold-hi);font-weight:600;white-space:nowrap}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid}
+.p-new{color:#9EC5FF;border-color:rgba(158,197,255,.35);background:rgba(158,197,255,.10)}
+.p-prog{color:var(--warn);border-color:rgba(227,155,84,.35);background:rgba(227,155,84,.10)}
+.p-done{color:#9FE3C0;border-color:rgba(79,169,124,.35);background:rgba(79,169,124,.10)}
+.p-rej{color:#FFB3AA;border-color:rgba(224,91,75,.35);background:rgba(224,91,75,.10)}
+.p-low{color:var(--muted);border-color:var(--line);background:#141419}
+.p-normal{color:#9EC5FF;border-color:rgba(158,197,255,.3);background:rgba(158,197,255,.08)}
+.p-high{color:var(--warn);border-color:rgba(227,155,84,.35);background:rgba(227,155,84,.10)}
+.p-critical{color:#FFB3AA;border-color:rgba(224,91,75,.4);background:rgba(224,91,75,.12)}
+.empty-state{padding:44px 20px;text-align:center;color:var(--muted)}
+.empty-state b{display:block;color:var(--silver);font-size:15px;margin-bottom:6px}
+td select{padding:6px 8px;font-size:12.5px;border-radius:8px;min-width:120px}
+
+/* شاشة النجاح */
+.done{text-align:center;padding:30px 10px}
+.done .tick{width:64px;height:64px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;
+  background:rgba(79,169,124,.12);border:1px solid rgba(79,169,124,.45);font-size:30px}
+.done .ref{font-family:"Sora",sans-serif;font-size:30px;font-weight:800;color:var(--gold-hi);margin:6px 0 2px}
+
+.badge-demo{
+  position:fixed;inset-block-end:14px;inset-inline-start:14px;z-index:60;
+  background:rgba(227,155,84,.14);border:1px solid rgba(227,155,84,.45);color:#FFD8B0;
+  padding:7px 13px;border-radius:999px;font-size:12px;display:none
+}
+.badge-demo.on{display:block}
+.loading{display:inline-block;width:15px;height:15px;border:2px solid rgba(0,0,0,.25);
+  border-top-color:#140F00;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+:focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
+
+@media (max-width:900px){
+  .gate{grid-template-columns:1fr}
+  .gate-side{order:-1;padding:26px;flex-direction:row;align-items:center;gap:18px;border:none;border-bottom:1px solid var(--line)}
+  .gate-logo{width:96px;margin:0}
+  .grid.two{grid-template-columns:1fr}
+  .wrap{padding:18px 14px 60px}
+  .topbar{padding:10px 14px;gap:12px}
+  .tabs{padding:0 8px}
+  .dual{flex-wrap:wrap;gap:12px}
+  .dual .seam{display:none}
+  .dual .side{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<section class="gate" id="gate">
+  <div class="gate-main">
+    <form class="card" id="loginForm" autocomplete="on">
+      <div class="eyebrow">Brand Rise</div>
+      <h2 class="display" style="font-size:26px;color:#fff">تسجيل الدخول</h2>
+      <p style="color:var(--muted);margin:6px 0 0;font-size:13.5px">بوابة طلبات العملاء. ادخل ببيانات الحساب اللي وصلتك من فريق Brand Rise.</p>
+
+      <div class="field">
+        <label for="u" class="req">اسم المستخدم <span class="en">username</span></label>
+        <input id="u" name="username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="p" class="req">كلمة المرور <span class="en">password</span></label>
+        <input id="p" name="password" type="password" autocomplete="current-password" required>
+      </div>
+
+      <div class="actions" style="margin-top:20px">
+        <button class="btn btn-primary btn-block" id="loginBtn" type="submit">دخول</button>
+      </div>
+      <div class="msg error" id="loginMsg"></div>
+      <p class="hint">نسيت الباسورد؟ كلّم مسؤول الحساب عندك في Brand Rise.</p>
+    </form>
+  </div>
+
+  <aside class="gate-side">
+    <div class="gate-tag">
+      <h2>اطلب من فريقك في دقيقة</h2>
+      <p>طلب واحد واضح، بيوصل للفريق المسؤول عن شركتك ومعاه كل التفاصيل: القناة، الفرع، الأولوية، وميعاد التسليم.</p>
+    </div>
+    <img class="gate-logo" id="gateLogo" alt="Brand Rise">
+    <div class="lockup" style="position:relative;z-index:1">
+      <div class="seam"></div>
+      <div class="lockup-text">
+        <div class="t1">Client Request Portal</div>
+        <div class="t2" style="font-size:13px;color:var(--muted);font-weight:400">Powered by Brand Rise</div>
+      </div>
+    </div>
+  </aside>
+</section>
+
+<!-- ======================= APP ======================= -->
+<main class="app" id="app">
+  <header class="topbar">
+    <div class="lockup">
+      <img class="mark" id="barBrand" alt="Brand Rise">
+      <div class="seam off" id="barSeam"></div>
+      <img class="mark" id="barClient" alt="" style="display:none">
+      <div class="lockup-text">
+        <div class="t1" id="barCap">Client Request Portal</div>
+        <div class="t2" id="barName">Brand Rise</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="who">
+      <b id="whoName">—</b>
+      <span id="whoRole">—</span>
+    </div>
+    <button class="btn btn-ghost" id="logoutBtn" type="button">خروج</button>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-view="new" type="button">طلب جديد</button>
+    <button class="tab" data-view="mine" type="button">طلباتي</button>
+    <button class="tab" data-view="admin" type="button" id="tabAdmin" style="display:none">لوحة التحكم</button>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- ---------- طلب جديد ---------- -->
+    <section class="view on" id="view-new">
+      <div class="dual" id="dual">
+        <div class="side">
+          <img class="mark" id="dualBrand" alt="Brand Rise">
+          <div>
+            <div class="cap">Agency</div>
+            <div class="nm">Brand Rise</div>
+          </div>
+        </div>
+        <div class="seam off" id="dualSeam" style="height:52px"></div>
+        <div class="side" id="dualClient" style="display:none">
+          <img class="mark" id="dualClientLogo" alt="">
+          <div>
+            <div class="cap">Client</div>
+            <div class="nm" id="dualClientName"></div>
+          </div>
+        </div>
+        <div class="empty" id="dualEmpty">اختار الشركة عشان يظهر البراندنج بتاعها هنا</div>
+      </div>
+
+      <form class="panel" id="reqForm">
+        <h3>تفاصيل الطلب</h3>
+        <p class="sub">كل الحقول اللي عليها نجمة مطلوبة. كل ما التفاصيل تكون أوضح، كل ما التنفيذ يبقى أسرع.</p>
+
+        <div class="grid two">
+          <div class="field">
+            <label for="f_company" class="req">الشركة <span class="en">company</span></label>
+            <select id="f_company" required><option value="">— اختار —</option></select>
+          </div>
+          <div class="field">
+            <label for="f_channel" class="req">قناة البيع <span class="en">sales channel</span></label>
+            <select id="f_channel" required disabled><option value="">اختار الشركة الأول</option></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f_request" class="req">الطلب بالتفصيل <span class="en">request</span></label>
+          <textarea id="f_request" required placeholder="اكتب المطلوب بالظبط: إيه الخدمة/المادة، الجمهور المستهدف، الرسالة، أي أرقام أو عروض لازم تظهر…"></textarea>
+        </div>
+
+        <div class="grid two">
+          <div class="field">
+            <label for="f_branch" class="req">الفرع <span class="en">branch</span></label>
+            <select id="f_branch" required disabled><option value="">اختار الشركة الأول</option></select>
+          </div>
+          <div class="field">
+            <label for="f_urgency" class="req">الأولوية <span class="en">urgency</span></label>
+            <select id="f_urgency" required><option value="">— اختار —</option></select>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="field">
+            <label for="f_due">تاريخ التسليم <span class="en">due date</span></label>
+            <input id="f_due" type="date">
+          </div>
+          <div class="field">
+            <label for="f_note">ملاحظات <span class="en">note</span></label>
+            <input id="f_note" placeholder="لينك مرفقات، اسم المسؤول، أي حاجة مهمة">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="sendBtn" type="submit">إرسال الطلب</button>
+          <button class="btn btn-ghost" type="reset" id="clearBtn">تفريغ النموذج</button>
+        </div>
+        <div class="msg" id="reqMsg"></div>
+      </form>
+
+      <div class="panel done" id="donePanel" style="display:none">
+        <div class="tick">✓</div>
+        <h3>تم استلام الطلب</h3>
+        <div class="ref" id="doneId">—</div>
+        <p class="sub" style="margin:0">احتفظ بالرقم ده للمتابعة. هتلاقي الطلب في تاب «طلباتي».</p>
+        <div class="actions" style="justify-content:center">
+          <button class="btn btn-primary" id="againBtn" type="button">طلب جديد</button>
+          <button class="btn btn-ghost" id="goMineBtn" type="button">شوف طلباتي</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- طلباتي ---------- -->
+    <section class="view" id="view-mine">
+      <div class="tools">
+        <input id="mineSearch" placeholder="ابحث في طلباتك…">
+        <button class="btn btn-ghost" id="mineRefresh" type="button">تحديث</button>
+      </div>
+      <div class="tablewrap" id="mineWrap"></div>
+    </section>
+
+    <!-- ---------- لوحة التحكم ---------- -->
+    <section class="view" id="view-admin">
+      <div class="stats" id="adminStats"></div>
+      <div class="tools">
+        <input id="admSearch" placeholder="ابحث بالرقم، الشركة، الطلب…">
+        <select id="admStatus"><option value="">كل الحالات</option><option>New</option><option>In Progress</option><option>Done</option><option>Rejected</option></select>
+        <select id="admCompany"><option value="">كل الشركات</option></select>
+        <select id="admUrgency"><option value="">كل الأولويات</option></select>
+        <button class="btn btn-ghost" id="admRefresh" type="button">تحديث</button>
+        <button class="btn btn-ghost" id="admExport" type="button">تصدير CSV</button>
+      </div>
+      <div class="tablewrap" id="admWrap"></div>
+    </section>
+
+  </div>
+</main>
+
+<div class="badge-demo" id="demoBadge">وضع تجريبي — مفيش لينك API في config.js</div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+"use strict";
+
+var CFG = window.BR_CONFIG || {};
+var DEMO = !CFG.API_URL;
+var $ = function(s){ return document.querySelector(s); };
+var state = { token:null, user:null, data:{companies:[],channels:[],branches:[],urgency:[]}, mine:[], all:[] };
+
+/* ============ بيانات تجريبية (لما مفيش API) ============ */
+var DEMO_DB = {
+  users:{
+    admin:{password:'admin123', name:'Brand Rise Ops', role:'admin', companies:['ALL']},
+    carehub:{password:'care123', name:'CareHub Team', role:'client', companies:['CH']},
+    eep:{password:'eep123', name:'EEP Team', role:'client', companies:['EEP']},
+    vcrest:{password:'vc123', name:'ValueCrest Team', role:'client', companies:['VC','CH']}
+  },
+  companies:[
+    {code:'CH', name:'CareHub', name_ar:'كير هب', logo:'assets/logos/carehub.png', color:'#E39B54'},
+    {code:'EEP', name:'Enterprise Excellence Partners', name_ar:'إنتربرايز إكسيلنس', logo:'assets/logos/eep.png', color:'#D9A62E'},
+    {code:'VC', name:'ValueCrest', name_ar:'فاليو كريست', logo:'assets/logos/valuecrest.png', color:'#C9A227'}
+  ],
+  channels:[
+    {company:'ALL',value:'Facebook'},{company:'ALL',value:'Instagram'},{company:'ALL',value:'TikTok'},
+    {company:'ALL',value:'WhatsApp'},{company:'ALL',value:'Call Center'},{company:'ALL',value:'Website'},
+    {company:'CH',value:'Referral Doctors'},{company:'VC',value:'Direct Sales'}
+  ],
+  branches:[
+    {company:'ALL',value:'Head Office'},{company:'CH',value:'Nasr City'},{company:'CH',value:'Maadi'},
+    {company:'CH',value:'Alexandria'},{company:'EEP',value:'New Cairo'},{company:'EEP',value:'Sheikh Zayed'},
+    {company:'VC',value:'Downtown'}
+  ],
+  urgency:[{value:'Low',sla:7},{value:'Normal',sla:4},{value:'High',sla:2},{value:'Critical',sla:1}],
+  requests:[]
+};
+
+/* ============ الاتصال بالـ API ============ */
+function api(action, body){
+  body = body || {}; body.action = action;
+  if (state.token) body.token = state.token;
+  if (DEMO) return demoApi(action, body);
+
+  return fetch(CFG.API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // يمنع preflight مع Apps Script
+    body: JSON.stringify(body)
+  })
+  .then(function(r){ return r.json(); })
+  .catch(function(){
+    if (!CFG.ALLOW_JSONP_FALLBACK) throw new Error('تعذّر الاتصال بالسيرفر');
+    return jsonp(action, body);
+  });
+}
+
+function jsonp(action, body){
+  return new Promise(function(resolve, reject){
+    var cb = 'br_cb_' + Date.now() + Math.floor(Math.random()*1000);
+    var t = setTimeout(function(){ cleanup(); reject(new Error('السيرفر مش راد')); }, 20000);
+    function cleanup(){ clearTimeout(t); delete window[cb]; if(s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function(res){ cleanup(); resolve(res); };
+    var s = document.createElement('script');
+    s.src = CFG.API_URL + '?action=' + encodeURIComponent(action)
+          + '&payload=' + encodeURIComponent(JSON.stringify(body))
+          + '&callback=' + cb;
+    s.onerror = function(){ cleanup(); reject(new Error('تعذّر الاتصال بالسيرفر')); };
+    document.body.appendChild(s);
+  });
+}
+
+function demoApi(action, body){
+  return new Promise(function(resolve){
+    setTimeout(function(){
+      if (action === 'login'){
+        var u = DEMO_DB.users[String(body.username||'').toLowerCase()];
+        if (!u || u.password !== body.password) return resolve({ok:false,error:'بيانات الدخول غير صحيحة'});
+        resolve({ok:true, token:'demo:'+body.username, user:{username:body.username,name:u.name,role:u.role}});
+      } else if (action === 'bootstrap'){
+        var uname = String(state.token||'').split(':')[1];
+        var me = DEMO_DB.users[uname] || {companies:[]};
+        var comps = DEMO_DB.companies.filter(function(c){
+          return me.role==='admin' || me.companies.indexOf('ALL')>-1 || me.companies.indexOf(c.code)>-1;
+        });
+        resolve({ok:true, companies:comps, channels:DEMO_DB.channels, branches:DEMO_DB.branches, urgency:DEMO_DB.urgency});
+      } else if (action === 'submit'){
+        var p = body.payload, id = 'BR-DEMO-' + ('000'+(DEMO_DB.requests.length+1)).slice(-4);
+        var cn = (DEMO_DB.companies.filter(function(c){return c.code===p.company;})[0]||{}).name || p.company;
+        DEMO_DB.requests.push({id:id, created:new Date().toISOString().slice(0,16).replace('T',' '),
+          username:String(state.token||'').split(':')[1], requester:p.requester_name, company:p.company, company_name:cn,
+          channel:p.sales_channel, request:p.request, branch:p.branch, urgency:p.urgency,
+          due:p.due_date||'', note:p.note||'', status:'New', assignee:''});
+        resolve({ok:true, id:id});
+      } else if (action === 'myRequests'){
+        var un = String(state.token||'').split(':')[1];
+        resolve({ok:true, rows: DEMO_DB.requests.filter(function(r){return r.username===un;}).slice().reverse()});
+      } else if (action === 'allRequests'){
+        resolve({ok:true, rows: DEMO_DB.requests.slice().reverse()});
+      } else if (action === 'updateRequest'){
+        DEMO_DB.requests.forEach(function(r){ if(r.id===body.id){ if(body.status) r.status=body.status; if(body.assignee!==undefined) r.assignee=body.assignee; } });
+        resolve({ok:true});
+      } else resolve({ok:false,error:'Unknown action'});
+    }, 320);
+  });
+}
+
+/* ============ أدوات ============ */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function show(el, txt, kind){ el.textContent = txt; el.className = 'msg show ' + (kind||'error'); }
+function hide(el){ el.className = 'msg'; }
+function busy(btn, on, label){
+  btn.disabled = on;
+  if (on){ btn.dataset.t = btn.innerHTML; btn.innerHTML = '<span class="loading"></span> ' + (label||'ثانية…'); }
+  else if (btn.dataset.t){ btn.innerHTML = btn.dataset.t; }
+}
+function statusPill(s){
+  var m = {'New':'p-new','In Progress':'p-prog','Done':'p-done','Rejected':'p-rej'};
+  return '<span class="pill ' + (m[s]||'p-new') + '">' + esc(s||'New') + '</span>';
+}
+function urgencyPill(u){
+  return '<span class="pill p-' + esc(String(u||'').toLowerCase()) + '">' + esc(u||'—') + '</span>';
+}
+
+/* ============ البراندنج ============ */
+var brandLogo = CFG.BRAND_LOGO || 'assets/logos/brandrise.png';
+$('#gateLogo').src = brandLogo;
+$('#barBrand').src = brandLogo;
+$('#dualBrand').src = brandLogo;
+$('#barCap').textContent = CFG.PORTAL_NAME || 'Client Request Portal';
+
+function applyCompany(code){
+  var c = null;
+  state.data.companies.forEach(function(x){ if (x.code === code) c = x; });
+  if (!c){
+    document.documentElement.style.setProperty('--brand', '#D9A62E');
+    $('#barSeam').classList.add('off'); $('#barClient').style.display='none';
+    $('#barName').textContent = 'Brand Rise';
+    $('#dualSeam').classList.add('off'); $('#dualClient').style.display='none';
+    $('#dualEmpty').style.display='block';
+    return;
+  }
+  document.documentElement.style.setProperty('--brand', c.color || '#D9A62E');
+  $('#barClient').src = c.logo; $('#barClient').style.display='block';
+  $('#barSeam').classList.remove('off');
+  $('#barName').textContent = 'Brand Rise × ' + c.name;
+  $('#dualClientLogo').src = c.logo;
+  $('#dualClientName').textContent = c.name + (c.name_ar ? ' — ' + c.name_ar : '');
+  $('#dualClient').style.display='flex';
+  $('#dualSeam').classList.remove('off');
+  $('#dualEmpty').style.display='none';
+}
+
+function fillOptions(sel, items, placeholder){
+  sel.innerHTML = '<option value="">' + placeholder + '</option>';
+  items.forEach(function(v){
+    var o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o);
+  });
+  sel.disabled = items.length === 0;
+}
+function forCompany(list, code){
+  return list.filter(function(x){ return x.company === 'ALL' || x.company === code; })
+             .map(function(x){ return x.value; })
+             .filter(function(v,i,a){ return a.indexOf(v) === i; });
+}
+
+/* ============ الدخول ============ */
+$('#loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var btn = $('#loginBtn'), msg = $('#loginMsg');
+  hide(msg); busy(btn, true, 'بيتحقق…');
+  api('login', { username: $('#u').value.trim(), password: $('#p').value })
+    .then(function(res){
+      if (!res || !res.ok) throw new Error((res && res.error) || 'فشل الدخول');
+      state.token = res.token; state.user = res.user;
+      try { sessionStorage.setItem('br_session', JSON.stringify({t:res.token, u:res.user})); } catch(e){}
+      return startApp();
+    })
+    .catch(function(err){ show(msg, err.message, 'error'); })
+    .then(function(){ busy(btn, false); });
+});
+
+function startApp(){
+  $('#gate').style.display = 'none';
+  $('#app').classList.add('on');
+  $('#whoName').textContent = state.user.name || state.user.username;
+  $('#whoRole').textContent = state.user.role === 'admin' ? 'Brand Rise — Admin' : 'Client account';
+  $('#tabAdmin').style.display = state.user.role === 'admin' ? 'block' : 'none';
+  return api('bootstrap').then(function(res){
+    if (!res.ok) throw new Error(res.error);
+    state.data = res;
+    var sel = $('#f_company');
+    sel.innerHTML = '<option value="">— اختار —</option>';
+    res.companies.forEach(function(c){
+      var o = document.createElement('option'); o.value = c.code; o.textContent = c.name; sel.appendChild(o);
+    });
+    var us = $('#f_urgency');
+    us.innerHTML = '<option value="">— اختار —</option>';
+    res.urgency.forEach(function(u){
+      var o = document.createElement('option'); o.value = u.value;
+      o.textContent = u.value + (u.sla ? ' — خلال ' + u.sla + ' يوم' : ''); us.appendChild(o);
+    });
+    var ac = $('#admCompany');
+    res.companies.forEach(function(c){
+      var o = document.createElement('option'); o.value = c.code; o.textContent = c.name; ac.appendChild(o);
+    });
+    var au = $('#admUrgency');
+    res.urgency.forEach(function(u){
+      var o = document.createElement('option'); o.value = u.value; o.textContent = u.value; au.appendChild(o);
+    });
+    if (res.companies.length === 1) { sel.value = res.companies[0].code; onCompany(); }
+    loadMine();
+    if (state.user.role === 'admin') loadAll();
+  });
+}
+
+$('#logoutBtn').addEventListener('click', function(){
+  try { sessionStorage.removeItem('br_session'); } catch(e){}
+  location.reload();
+});
+
+/* ============ النموذج ============ */
+function onCompany(){
+  var code = $('#f_company').value;
+  applyCompany(code);
+  if (!code){
+    fillOptions($('#f_channel'), [], 'اختار الشركة الأول');
+    fillOptions($('#f_branch'), [], 'اختار الشركة الأول');
+    return;
+  }
+  fillOptions($('#f_channel'), forCompany(state.data.channels, code), '— اختار —');
+  fillOptions($('#f_branch'), forCompany(state.data.branches, code), '— اختار —');
+}
+$('#f_company').addEventListener('change', onCompany);
+
+$('#f_due').min = new Date().toISOString().slice(0,10);
+
+$('#reqForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var btn = $('#sendBtn'), msg = $('#reqMsg');
+  hide(msg);
+  var payload = {
+    company: $('#f_company').value,
+    sales_channel: $('#f_channel').value,
+    request: $('#f_request').value.trim(),
+    branch: $('#f_branch').value,
+    urgency: $('#f_urgency').value,
+    due_date: $('#f_due').value,
+    note: $('#f_note').value.trim(),
+    requester_name: state.user.name || state.user.username
+  };
+  if (payload.request.length < 10){
+    show(msg, 'اكتب تفاصيل أكتر في خانة الطلب — 10 حروف على الأقل.', 'error');
+    $('#f_request').focus(); return;
+  }
+  busy(btn, true, 'بيتبعت…');
+  api('submit', { payload: payload })
+    .then(function(res){
+      if (!res.ok) throw new Error(res.error);
+      $('#doneId').textContent = res.id;
+      $('#reqForm').style.display = 'none';
+      $('#donePanel').style.display = 'block';
+      $('#donePanel').scrollIntoView({behavior:'smooth', block:'center'});
+      loadMine();
+      if (state.user.role === 'admin') loadAll();
+    })
+    .catch(function(err){ show(msg, err.message, 'error'); })
+    .then(function(){ busy(btn, false); });
+});
+
+$('#clearBtn').addEventListener('click', function(){
+  setTimeout(function(){ onCompany(); hide($('#reqMsg')); }, 0);
+});
+$('#againBtn').addEventListener('click', function(){
+  $('#reqForm').reset(); onCompany();
+  $('#donePanel').style.display = 'none';
+  $('#reqForm').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+$('#goMineBtn').addEventListener('click', function(){ switchView('mine'); });
+
+/* ============ التابات ============ */
+function switchView(name){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.view === name); });
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.toggle('on', v.id === 'view-' + name); });
+  window.scrollTo({top:0});
+}
+$('#tabs').addEventListener('click', function(e){
+  var t = e.target.closest('.tab'); if (t) switchView(t.dataset.view);
+});
+
+/* ============ طلباتي ============ */
+function loadMine(){
+  $('#mineWrap').innerHTML = '<div class="empty-state">بيحمّل…</div>';
+  api('myRequests').then(function(res){
+    state.mine = res.ok ? res.rows : [];
+    renderMine();
+  }).catch(function(){ $('#mineWrap').innerHTML = '<div class="empty-state">تعذّر تحميل الطلبات</div>'; });
+}
+$('#mineRefresh').addEventListener('click', loadMine);
+$('#mineSearch').addEventListener('input', renderMine);
+
+function renderMine(){
+  var q = $('#mineSearch').value.trim().toLowerCase();
+  var rows = state.mine.filter(function(r){
+    return !q || JSON.stringify(r).toLowerCase().indexOf(q) > -1;
+  });
+  if (!rows.length){
+    $('#mineWrap').innerHTML = '<div class="empty-state"><b>مفيش طلبات لسه</b>ابدأ من تاب «طلب جديد».</div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>الرقم</th><th>الشركة</th><th>الطلب</th><th>القناة</th><th>الفرع</th><th>الأولوية</th><th>التسليم</th><th>الحالة</th><th>أُرسل في</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    html += '<tr><td class="id">' + esc(r.id) + '</td><td>' + esc(r.company_name || r.company) + '</td>'
+      + '<td class="rq">' + esc(r.request) + '</td><td>' + esc(r.channel) + '</td><td>' + esc(r.branch) + '</td>'
+      + '<td>' + urgencyPill(r.urgency) + '</td><td>' + esc(r.due || '—') + '</td><td>' + statusPill(r.status) + '</td>'
+      + '<td>' + esc(r.created) + '</td></tr>';
+  });
+  $('#mineWrap').innerHTML = html + '</tbody></table>';
+}
+
+/* ============ لوحة التحكم ============ */
+function loadAll(){
+  $('#admWrap').innerHTML = '<div class="empty-state">بيحمّل…</div>';
+  api('allRequests').then(function(res){
+    state.all = res.ok ? res.rows : [];
+    renderAdmin();
+  }).catch(function(){ $('#admWrap').innerHTML = '<div class="empty-state">تعذّر تحميل الطلبات</div>'; });
+}
+['#admSearch','#admStatus','#admCompany','#admUrgency'].forEach(function(s){
+  $(s).addEventListener('input', renderAdmin); $(s).addEventListener('change', renderAdmin);
+});
+$('#admRefresh').addEventListener('click', loadAll);
+
+function adminFiltered(){
+  var q = $('#admSearch').value.trim().toLowerCase();
+  var st = $('#admStatus').value, co = $('#admCompany').value, ur = $('#admUrgency').value;
+  return state.all.filter(function(r){
+    if (st && r.status !== st) return false;
+    if (co && r.company !== co) return false;
+    if (ur && r.urgency !== ur) return false;
+    if (q && JSON.stringify(r).toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+}
+
+function renderAdmin(){
+  var all = state.all;
+  var c = {New:0,'In Progress':0,Done:0,Rejected:0};
+  all.forEach(function(r){ if (c[r.status] !== undefined) c[r.status]++; });
+  $('#adminStats').innerHTML =
+    stat(all.length,'كل الطلبات') + stat(c['New'],'جديد') + stat(c['In Progress'],'تحت التنفيذ') +
+    stat(c['Done'],'تم') + stat(all.filter(function(r){return r.urgency==='Critical' && r.status!=='Done';}).length,'حرج ومفتوح');
+
+  var rows = adminFiltered();
+  if (!rows.length){
+    $('#admWrap').innerHTML = '<div class="empty-state"><b>مفيش نتائج</b>غيّر الفلاتر أو حدّث الصفحة.</div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>الرقم</th><th>العميل</th><th>الشركة</th><th>الطلب</th><th>القناة</th><th>الفرع</th><th>الأولوية</th><th>التسليم</th><th>الحالة</th><th>المسؤول</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    html += '<tr><td class="id">' + esc(r.id) + '</td>'
+      + '<td>' + esc(r.requester || r.username) + '</td>'
+      + '<td>' + esc(r.company_name || r.company) + '</td>'
+      + '<td class="rq">' + esc(r.request) + (r.note ? '<div style="color:var(--muted);font-size:12px;margin-top:6px">📎 ' + esc(r.note) + '</div>' : '') + '</td>'
+      + '<td>' + esc(r.channel) + '</td><td>' + esc(r.branch) + '</td>'
+      + '<td>' + urgencyPill(r.urgency) + '</td><td>' + esc(r.due || '—') + '</td>'
+      + '<td><select data-id="' + esc(r.id) + '" class="st">'
+        + ['New','In Progress','Done','Rejected'].map(function(s){
+            return '<option' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('')
+      + '</select></td>'
+      + '<td><input class="as" data-id="' + esc(r.id) + '" value="' + esc(r.assignee) + '" placeholder="اسم المسؤول" style="min-width:130px;padding:6px 8px;font-size:12.5px"></td></tr>';
+  });
+  $('#admWrap').innerHTML = html + '</tbody></table>';
+
+  $('#admWrap').querySelectorAll('select.st').forEach(function(sel){
+    sel.addEventListener('change', function(){
+      update(sel.dataset.id, { status: sel.value }, sel);
+    });
+  });
+  $('#admWrap').querySelectorAll('input.as').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      update(inp.dataset.id, { assignee: inp.value }, inp);
+    });
+  });
+}
+function stat(n,l){ return '<div class="stat"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
+
+function update(id, patch, el){
+  el.disabled = true;
+  var body = { id: id };
+  for (var k in patch) body[k] = patch[k];
+  api('updateRequest', body).then(function(res){
+    el.disabled = false;
+    if (!res.ok) { alert(res.error); return; }
+    state.all.forEach(function(r){ if (r.id === id) for (var k in patch) r[k] = patch[k]; });
+    renderAdmin();
+  }).catch(function(){ el.disabled = false; alert('تعذّر الحفظ'); });
+}
+
+$('#admExport').addEventListener('click', function(){
+  var rows = adminFiltered();
+  if (!rows.length) return;
+  var cols = ['id','created','requester','username','company_name','channel','request','branch','urgency','due','note','status','assignee'];
+  var csv = '\uFEFF' + cols.join(',') + '\n' + rows.map(function(r){
+    return cols.map(function(c){ return '"' + String(r[c] == null ? '' : r[c]).replace(/"/g,'""') + '"'; }).join(',');
+  }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'brandrise-requests-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+});
+
+/* ============ استئناف الجلسة ============ */
+if (DEMO) $('#demoBadge').classList.add('on');
+try {
+  var saved = JSON.parse(sessionStorage.getItem('br_session') || 'null');
+  if (saved && saved.t) {
+    state.token = saved.t; state.user = saved.u;
+    startApp().catch(function(){ sessionStorage.removeItem('br_session'); location.reload(); });
+  }
+} catch(e){}
+
+})();
+</script>
+</body>
+</html>
